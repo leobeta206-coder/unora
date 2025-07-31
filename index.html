@@ -36,13 +36,13 @@
       width: 80px;
       height: 100px;
       object-fit: cover;
+      border-radius: 16px 16px 0 0;
       margin-top: 20px;
-
     }
 
     .chat-container {
       width: 100%;
-      max-width: 900px;
+      max-width: 800px;
       background: white;
       border-radius: 16px;
       box-shadow: var(--shadow);
@@ -227,7 +227,7 @@
 </head>
 
 <body>
-  <img src="favicon.png" class="header-image">
+  <img src="logos/favicon.png" class="header-image">
   <div class="chat-container">
     <div class="chat-header">
       <i class="fas fa-robot"></i>
@@ -253,10 +253,10 @@
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
   <script>
-    const API_KEY = "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"; // Tu API Key OpenRouter
+    const API_KEY = "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"; // Tu API Key OpenRouter
     const MODEL = "deepseek/deepseek-r1-0528:free"; // Modelo DeepSeek R1 versión 0528 free
 
-    let abortController = null;
+    let abortController = null; // Controlador para cancelar petición fetch
 
     function addMessage(role, content) {
       const chatContainer = document.getElementById('chat-messages');
@@ -291,7 +291,12 @@
       const message = userInput.value.trim();
       if (message === '') return;
 
-      if (abortController) abortController.abort();
+      // Si hay una petición en curso, cancelarla
+      if (abortController) {
+        abortController.abort();
+      }
+
+      // Crear nuevo AbortController para esta petición
       abortController = new AbortController();
 
       addMessage('user', message);
@@ -307,18 +312,9 @@
           },
           body: JSON.stringify({
             model: MODEL,
-            messages: [
-              {
-                role: "system",
-                content: "Eres un asistente académico de Unora Academy. Siempre respondes en español. Tienes un tono amable, claro, educativo y empático. Ayudas a resolver dudas sobre el curso EXCOBA, explicando con ejemplos y con paciencia."
-              },
-              {
-                role: "user",
-                content: message
-              }
-            ]
+            messages: [{role: "user", content: message}]
           }),
-          signal: abortController.signal
+          signal: abortController.signal // Asociar señal para poder abortar
         });
 
         if (!response.ok) {
@@ -334,6 +330,8 @@
 
       } catch (error) {
         hideTypingIndicator();
+
+        // Si el error es por abortar la petición, no mostrar error al usuario
         if (error.name === 'AbortError') {
           console.log("Petición anterior abortada");
           return;
@@ -342,15 +340,16 @@
         addMessage('bot', `Error: No se pudo conectar con el servidor. ${error.message}`);
         console.error("Error:", error);
       } finally {
+        // Limpiar controlador cuando la petición termina o falla
         abortController = null;
       }
     }
 
+    // Enviar mensaje con Enter
     document.getElementById('user-input').addEventListener('keypress', function (e) {
       if (e.key === 'Enter') sendMessage();
     });
   </script>
-
 </body>
 
 </html>
