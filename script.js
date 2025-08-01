@@ -1,4 +1,4 @@
-const API_KEY = "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"; // Tu API Key OpenRouter
+const apiKey = process.env.OPENROUTER_API_KEY;
 const MODEL = "deepseek/deepseek-r1-0528:free";  // Modelo gratuito GLM 4.5 Air
 
 let abortController = null;
